@@ -1,0 +1,2 @@
+# forex
+paidy-test
