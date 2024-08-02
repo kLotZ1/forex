@@ -8,5 +8,7 @@ object ClientErrors {
     final case class TokenExpired(msg: String) extends ClientError
     final case class ResponseBodyIsEmpty(msg: String) extends ClientError
     final case class UnexpectedError(msg: String) extends ClientError
+    final case class NotFoundError(msg: String) extends ClientError
+    final case class InternalServerError(msg: String) extends ClientError
   }
 }

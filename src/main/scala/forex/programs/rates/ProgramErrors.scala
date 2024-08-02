@@ -8,11 +8,14 @@ object ProgramErrors {
     final case class RateLookupFailed(msg: String) extends ProgramError
     final case class InvalidCurrencyPair(msg: String) extends ProgramError
     final case class UnexpectedError(msg: String) extends ProgramError
+    final case class NotFound(msg: String) extends ProgramError
+    final case class HeaderMissing(msg: String) extends ProgramError
   }
 
   def toProgramError(error: RatesServiceError): ProgramError = error match {
-    case RatesServiceError.OneFrameLookupFailed(msg) => ProgramError.RateLookupFailed(msg)
+    case RatesServiceError.UnexpectedError(msg) => ProgramError.RateLookupFailed(msg)
     case RatesServiceError.InvalidCurrencyPair(msg) => ProgramError.InvalidCurrencyPair(msg)
-    case RatesServiceError.UnexpectedError(msg) => ProgramError.UnexpectedError(msg)
+    case RatesServiceError.ClientTokenExpired(msg) => ProgramError.RateLookupFailed(msg)
+    case RatesServiceError.NotFound(msg) => ProgramError.NotFound(msg)
   }
 }

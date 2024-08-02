@@ -6,7 +6,8 @@ object Protocol {
 
   final case class GetRatesRequest(
       from: Currency,
-      to: Currency
+      to: Currency,
+      token: String
   )
 
 }

@@ -4,5 +4,5 @@ import forex.domain.Rate
 import ServiceErrors._
 
 trait ServiceAlgebra[F[_]] {
-  def get(pair: Rate.Pair): F[ServiceError Either Rate]
+  def get(pair: Rate.Pair, token: String): F[ServiceError Either Rate]
 }

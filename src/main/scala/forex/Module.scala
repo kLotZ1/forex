@@ -12,7 +12,7 @@ import org.http4s.server.middleware.{AutoSlash, Timeout}
 
 class Module[F[_]: Concurrent: Timer](config: ApplicationConfig, client: OneFrameClient[F]) {
 
-  private val ratesService: RatesService[F] = RatesServices.RateInterpreter(client, config.client)
+  private val ratesService: RatesService[F] = RatesServices.RateInterpreter[F](client)
 
   private val ratesProgram: RatesProgram[F] = RatesProgram[F](ratesService)
 

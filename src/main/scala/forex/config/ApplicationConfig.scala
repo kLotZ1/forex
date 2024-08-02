@@ -14,7 +14,6 @@ case class HttpConfig(
 )
 
 case class ClientConfig(
-     host: String,
-     port: Int,
-     token: String
+    host: String,
+    port: Int
 )
