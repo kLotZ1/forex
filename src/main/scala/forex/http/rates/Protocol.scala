@@ -35,5 +35,4 @@ object Protocol {
 
   implicit val responseEncoder: Encoder[GetApiResponse] =
     deriveConfiguredEncoder[GetApiResponse]
-
 }

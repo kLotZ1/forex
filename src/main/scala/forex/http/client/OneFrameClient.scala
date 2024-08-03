@@ -31,8 +31,19 @@ class OneFrameClient[F[_]: Async](client: Client[F], config: ClientConfig) {
       .use(Async[F].pure)
   }
 
-  private def errorResponse(error: ClientError): F[Either[ClientError, RateResponse]] =
-    error.asLeft[RateResponse].pure[F]
+  private def createBaseUri(pair: Rate.Pair): Uri =
+    Uri(
+      scheme = Some(Uri.Scheme.http),
+      authority = Some(
+        Uri.Authority(
+          host = Uri.RegName(config.host),
+          port = Some(config.port)
+        )
+      ),
+      path = Uri.Path.unsafeFromString(ratePrefixPath),
+      query = Query.fromPairs("pair" -> pair.pairString())
+    )
+
   private def handleResponse(response: Response[F]): F[Either[ClientError, RateResponse]] =
     response.status match {
       case Status.Ok                  => handleOkResponse(response)
@@ -55,25 +66,15 @@ class OneFrameClient[F[_]: Async](client: Client[F], config: ClientConfig) {
       }
     }
 
+  private def errorResponse(error: ClientError): F[Either[ClientError, RateResponse]] =
+    error.asLeft[RateResponse].pure[F]
+
   private def handleUnexpectedSuccessResponse(response: Response[F]): F[Either[ClientError, RateResponse]] =
     response.bodyText.compile.string.map { body =>
       ClientError
         .UnexpectedError(s"Unexpected success status: ${response.status.code}, body: $body")
         .asLeft[RateResponse]
     }
-
-  private def createBaseUri(pair: Rate.Pair): Uri =
-    Uri(
-      scheme = Some(Uri.Scheme.http),
-      authority = Some(
-        Uri.Authority(
-          host = Uri.RegName(config.host),
-          port = Some(config.port)
-        )
-      ),
-      path = Uri.Path.unsafeFromString(ratePrefixPath),
-      query = Query.fromPairs("pair" -> pair.pairString())
-    )
 }
 
 object OneFrameClient {

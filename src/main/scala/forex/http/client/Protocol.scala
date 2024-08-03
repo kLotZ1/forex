@@ -18,14 +18,13 @@ object Protocol {
       timestamp: Timestamp
   )
 
-  object RateResponse{
-    def toRate(response: RateResponse): Rate = {
+  object RateResponse {
+    def asRate(response: RateResponse): Rate =
       Rate(
         pair = Rate.Pair(from = response.from, to = response.to),
         price = response.price,
         timestamp = response.timestamp
       )
-    }
   }
 
   implicit val currencyDecoder: Decoder[Currency] = Decoder.decodeString.map(Currency.fromString)
@@ -40,14 +39,15 @@ object Protocol {
     }
   }
 
-  implicit val rateResponseDecoder: Decoder[RateResponse] = (c: HCursor) => for {
-    from <- c.downField("from").as[Currency]
-    to <- c.downField("to").as[Currency]
-    bid <- c.downField("bid").as[Price]
-    ask <- c.downField("ask").as[Price]
-    price <- c.downField("price").as[Price]
-    timestamp <- c.downField("time_stamp").as[Timestamp]
-  } yield RateResponse(from, to, bid, ask, price, timestamp)
+  implicit val rateResponseDecoder: Decoder[RateResponse] = (c: HCursor) =>
+    for {
+      from <- c.downField("from").as[Currency]
+      to <- c.downField("to").as[Currency]
+      bid <- c.downField("bid").as[Price]
+      ask <- c.downField("ask").as[Price]
+      price <- c.downField("price").as[Price]
+      timestamp <- c.downField("time_stamp").as[Timestamp]
+    } yield RateResponse(from, to, bid, ask, price, timestamp)
 
   implicit val rateResponseListDecoder: Decoder[List[RateResponse]] = Decoder.decodeList[RateResponse]
 }

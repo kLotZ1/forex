@@ -9,6 +9,7 @@ object Dependencies {
     val http4s     = "0.22.15"
     val circe      = "0.14.2"
     val pureConfig = "0.17.4"
+    val redis      = "0.14.0"
 
     val kindProjector  = "0.13.2"
     val logback        = "1.2.3"
@@ -18,8 +19,9 @@ object Dependencies {
   }
 
   object Libraries {
-    def circe(artifact: String): ModuleID  = "io.circe"   %% artifact % Versions.circe
-    def http4s(artifact: String): ModuleID = "org.http4s" %% artifact % Versions.http4s
+    def circe(artifact: String): ModuleID      = "io.circe"       %% artifact % Versions.circe
+    def http4s(artifact: String): ModuleID     = "org.http4s"     %% artifact % Versions.http4s
+    def profunktor(artifact: String): ModuleID = "dev.profunktor" %% artifact % Versions.redis
 
     lazy val cats       = "org.typelevel" %% "cats-core"   % Versions.cats
     lazy val catsEffect = "org.typelevel" %% "cats-effect" % Versions.catsEffect
@@ -33,6 +35,7 @@ object Dependencies {
     lazy val circeGeneric    = circe("circe-generic")
     lazy val circeGenericExt = circe("circe-generic-extras")
     lazy val circeParser     = circe("circe-parser")
+    lazy val redisEffects    = profunktor("redis4cats-effects")
     lazy val pureConfig      = "com.github.pureconfig" %% "pureconfig" % Versions.pureConfig
 
     // Compiler plugins

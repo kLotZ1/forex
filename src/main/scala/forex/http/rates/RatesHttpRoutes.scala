@@ -6,10 +6,10 @@ import cats.syntax.all._
 import forex.domain.Currency
 import forex.programs.RatesProgram
 import forex.programs.rates.ProgramErrors.ProgramError
-import forex.programs.rates.{ Protocol => RatesProgramProtocol }
+import forex.programs.rates.{Protocol => RatesProgramProtocol}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
-import org.http4s.{ HttpRoutes, Request, Response }
+import org.http4s.{HttpRoutes, Request, Response}
 import org.typelevel.ci.CIString
 
 class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
@@ -18,9 +18,11 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
   import Protocol._
   import QueryParams._
 
+  val routes: HttpRoutes[F] = Router(
+    prefixPath -> httpRoutes
+  )
   private[http] val prefixPath = "/rates"
   private[http] val authHeader = CIString("token")
-
   private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ GET -> Root :? FromQueryParam(from) +& ToQueryParam(to) =>
       (for {
@@ -51,8 +53,4 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
     case ProgramError.NotFound(msg)            => NotFound(s"Resource not found: $msg")
     case ProgramError.HeaderMissing(msg)       => BadRequest(msg)
   }
-
-  val routes: HttpRoutes[F] = Router(
-    prefixPath -> httpRoutes
-  )
 }
