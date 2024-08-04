@@ -14,7 +14,7 @@ import io.circe.{Decoder, Encoder, HCursor, Json}
 
 import java.net.URLEncoder
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
+import java.time.format.{DateTimeFormatter, DateTimeParseException}
 import scala.concurrent.duration.FiniteDuration
 
 class RedisCache[F[_]](cmd: RedisCommands[F, String, String]) extends Cache[F, String, String] {
@@ -31,24 +31,38 @@ class RedisCache[F[_]](cmd: RedisCommands[F, String, String]) extends Cache[F, S
 object RedisCache {
   private val dateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
-  implicit val rateEncoder: Encoder[Rate] = (a: Rate) => Json.obj(
-    ("from", Json.fromString(a.pair.from.toString)),
-    ("to", Json.fromString(a.pair.to.toString)),
-    ("price", Json.fromBigDecimal(a.price.value)),
-    ("timestamp", Json.fromString(a.timestamp.value.format(dateTimeFormatter)))
+  implicit val rateEncoder: Encoder[Rate] = (a: Rate) =>
+    Json.obj(
+      ("from", Json.fromString(a.pair.from.toString)),
+      ("to", Json.fromString(a.pair.to.toString)),
+      ("price", Json.fromBigDecimal(a.price.value)),
+      ("timestamp", Json.fromString(a.timestamp.value.format(dateTimeFormatter)))
   )
 
-  implicit val rateDecoder: Decoder[Rate] = (c: HCursor) => for {
-    from <- c.downField("from").as[String].map(Currency.fromString)
-    to <- c.downField("to").as[String].map(Currency.fromString)
-    price <- c.downField("price").as[BigDecimal]
-    timestamp <- c.downField("timestamp").as[String].map(OffsetDateTime.parse(_, dateTimeFormatter))
-  } yield
-    Rate(
-      Rate.Pair(from, to),
-      Price(price),
-      Timestamp(timestamp)
+  implicit val rateDecoder: Decoder[Rate] = (c: HCursor) =>
+    for {
+      from <- c.downField("from")
+               .as(Decoder.decodeString.emap(str => Currency.fromString(str).toRight("Invalid currency for 'from'")))
+      to <- c.downField("to")
+             .as(Decoder.decodeString.emap(str => Currency.fromString(str).toRight("Invalid currency for 'to'")))
+      price <- c.downField("price").as[BigDecimal]
+      timestamp <- c.downField("timestamp")
+                    .as[String]
+                    .map(
+                      str =>
+                        try {
+                          OffsetDateTime.parse(str, dateTimeFormatter)
+                        } catch {
+                          case _: DateTimeParseException => throw new Exception("Invalid timestamp format")
+                      }
+                    )
+    } yield
+      Rate(
+        Rate.Pair(from, to),
+        Price(price),
+        Timestamp(timestamp)
     )
+
   def rateToString(rate: Rate): String = rate.asJson.noSpaces
 
   def parseRate(rateString: String): Either[io.circe.Error, Rate] =

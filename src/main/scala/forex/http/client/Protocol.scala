@@ -30,8 +30,9 @@ object Protocol {
 
   final case class ErrorResponse(error: String)
 
-  implicit val currencyDecoder: Decoder[Currency] = Decoder.decodeString.map(Currency.fromString)
-
+  implicit val currencyDecoder: Decoder[Currency] = Decoder.decodeString.emap { str =>
+    Currency.fromString(str).toRight("Invalid currency")
+  }
   implicit val priceDecoder: Decoder[Price] = Decoder.decodeBigDecimal.map(Price.apply)
 
   implicit val timestampDecoder: Decoder[Timestamp] = Decoder.decodeString.emap { str =>

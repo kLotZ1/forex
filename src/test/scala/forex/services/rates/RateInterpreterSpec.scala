@@ -17,10 +17,10 @@ class RateInterpreterSpec extends AnyFlatSpec with Matchers with MockFactory {
 
   "RateInterpreter" should "return cached rate when available" in {
     val clientMock: Client[IO] = mock[Client[IO]]
-    val config                     = ClientConfig("localhost", 8080)
-    val oneFrameClient             = new OneFrameClient[IO](clientMock, config)
-    val mockCache                  = mock[Cache[IO, String, String]]
-    val interpreter                = new RateInterpreter[IO](oneFrameClient, mockCache)
+    val config                 = ClientConfig("localhost", 8080)
+    val oneFrameClient         = new OneFrameClient[IO](clientMock, config)
+    val mockCache              = mock[Cache[IO, String, String]]
+    val interpreter            = new RateInterpreter[IO](oneFrameClient, mockCache)
 
     val pair             = Rate.Pair(Currency.USD, Currency.EUR)
     val token            = "test-token"
