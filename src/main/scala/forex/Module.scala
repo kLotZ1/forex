@@ -16,13 +16,14 @@ class Module[F[_]: Concurrent: Timer](config: ApplicationConfig,
                                       client: OneFrameClient[F],
                                       redisCmds: RedisCommands[F, String, String]) {
 
-  type PartialMiddleware = HttpRoutes[F] => HttpRoutes[F]
-  type TotalMiddleware   = HttpApp[F] => HttpApp[F]
-  val httpApp: HttpApp[F] = appMiddleware(routesMiddleware(http).orNotFound)
   private val rateCache: RatesRedisCache[F, String, String] = Caches.RateCache(redisCmds)
-  private val ratesService: RatesService[F] = RatesServices.RateInterpreter[F](client, rateCache)
-  private val ratesProgram: RatesProgram[F] = RatesProgram[F](ratesService)
-  private val ratesHttpRoutes: HttpRoutes[F] = new RatesHttpRoutes[F](ratesProgram).routes
+  private val ratesService: RatesService[F]                 = RatesServices.RateInterpreter[F](client, rateCache)
+  private val ratesProgram: RatesProgram[F]                 = RatesProgram[F](ratesService)
+  private val ratesHttpRoutes: HttpRoutes[F]                = new RatesHttpRoutes[F](ratesProgram).routes
+
+  type PartialMiddleware = HttpRoutes[F] => HttpRoutes[F]
+  type TotalMiddleware = HttpApp[F] => HttpApp[F]
+
   private val routesMiddleware: PartialMiddleware = {
     { http: HttpRoutes[F] =>
       AutoSlash(http)
@@ -32,5 +33,7 @@ class Module[F[_]: Concurrent: Timer](config: ApplicationConfig,
     Timeout(config.http.timeout)(http)
   }
   private val http: HttpRoutes[F] = ratesHttpRoutes
+
+  val httpApp: HttpApp[F] = appMiddleware(routesMiddleware(http).orNotFound)
 
 }

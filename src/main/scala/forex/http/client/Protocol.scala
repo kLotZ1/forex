@@ -2,6 +2,7 @@ package forex.http.client
 
 import forex.domain.{Currency, Price, Rate, Timestamp}
 import io.circe.generic.extras.Configuration
+import io.circe.generic.extras.semiauto.deriveExtrasDecoder
 import io.circe.{Decoder, HCursor}
 
 import java.time.OffsetDateTime
@@ -27,6 +28,8 @@ object Protocol {
       )
   }
 
+  final case class ErrorResponse(error: String)
+
   implicit val currencyDecoder: Decoder[Currency] = Decoder.decodeString.map(Currency.fromString)
 
   implicit val priceDecoder: Decoder[Price] = Decoder.decodeBigDecimal.map(Price.apply)
@@ -48,6 +51,8 @@ object Protocol {
       price <- c.downField("price").as[Price]
       timestamp <- c.downField("time_stamp").as[Timestamp]
     } yield RateResponse(from, to, bid, ask, price, timestamp)
+
+  implicit val rateErrorResponseDecoder: Decoder[ErrorResponse] = deriveExtrasDecoder[ErrorResponse]
 
   implicit val rateResponseListDecoder: Decoder[List[RateResponse]] = Decoder.decodeList[RateResponse]
 }

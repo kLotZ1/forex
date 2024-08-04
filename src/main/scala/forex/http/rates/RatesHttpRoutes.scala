@@ -3,7 +3,6 @@ package rates
 
 import cats.effect.Sync
 import cats.syntax.all._
-import forex.domain.Currency
 import forex.programs.RatesProgram
 import forex.programs.rates.ProgramErrors.ProgramError
 import forex.programs.rates.{Protocol => RatesProgramProtocol}
@@ -18,16 +17,15 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
   import Protocol._
   import QueryParams._
 
-  val routes: HttpRoutes[F] = Router(
-    prefixPath -> httpRoutes
-  )
   private[http] val prefixPath = "/rates"
   private[http] val authHeader = CIString("token")
+
   private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ GET -> Root :? FromQueryParam(from) +& ToQueryParam(to) =>
       (for {
         headerValue <- extractHeader(req, authHeader)
-        response <- handleRatesRequest(from, to, headerValue)
+        apiRequest = RatesProgramProtocol.GetRatesRequest(from, to, headerValue)
+        response <- handleRatesRequest(apiRequest)
       } yield response).handleErrorWith {
         case error: ProgramError => handleProgramError(error)
         case other               => InternalServerError(s"Unexpected error: ${other.getMessage}")
@@ -40,8 +38,8 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
       .map(_.head.value)
       .liftTo[F](ProgramError.HeaderMissing(s"Missing required header: $headerName"))
 
-  private def handleRatesRequest(from: Currency, to: Currency, headerValue: String): F[Response[F]] =
-    rates.get(RatesProgramProtocol.GetRatesRequest(from, to, headerValue)).flatMap {
+  private def handleRatesRequest(request: RatesProgramProtocol.GetRatesRequest): F[Response[F]] =
+    rates.get(request).flatMap {
       case Right(rate) => Ok(rate.asGetApiResponse)
       case Left(error) => handleProgramError(error)
     }
@@ -52,5 +50,10 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
     case ProgramError.UnexpectedError(msg)     => InternalServerError(s"Unexpected error: $msg")
     case ProgramError.NotFound(msg)            => NotFound(s"Resource not found: $msg")
     case ProgramError.HeaderMissing(msg)       => BadRequest(msg)
+    case ProgramError.Forbidden(msg)           => Forbidden(msg)
   }
+
+  val routes: HttpRoutes[F] = Router(
+    prefixPath -> httpRoutes
+  )
 }

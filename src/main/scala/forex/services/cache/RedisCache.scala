@@ -31,29 +31,24 @@ class RedisCache[F[_]](cmd: RedisCommands[F, String, String]) extends Cache[F, S
 object RedisCache {
   private val dateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
-  implicit val rateEncoder: Encoder[Rate] = new Encoder[Rate] {
-    final def apply(a: Rate): Json = Json.obj(
-      ("from", Json.fromString(a.pair.from.toString)),
-      ("to", Json.fromString(a.pair.to.toString)),
-      ("price", Json.fromBigDecimal(a.price.value)),
-      ("timestamp", Json.fromString(a.timestamp.value.format(dateTimeFormatter)))
-    )
-  }
+  implicit val rateEncoder: Encoder[Rate] = (a: Rate) => Json.obj(
+    ("from", Json.fromString(a.pair.from.toString)),
+    ("to", Json.fromString(a.pair.to.toString)),
+    ("price", Json.fromBigDecimal(a.price.value)),
+    ("timestamp", Json.fromString(a.timestamp.value.format(dateTimeFormatter)))
+  )
 
-  implicit val rateDecoder: Decoder[Rate] = new Decoder[Rate] {
-    final def apply(c: HCursor): Decoder.Result[Rate] =
-      for {
-        from <- c.downField("from").as[String].map(Currency.fromString)
-        to <- c.downField("to").as[String].map(Currency.fromString)
-        price <- c.downField("price").as[BigDecimal]
-        timestamp <- c.downField("timestamp").as[String].map(OffsetDateTime.parse(_, dateTimeFormatter))
-      } yield
-        Rate(
-          Rate.Pair(from, to),
-          Price(price),
-          Timestamp(timestamp)
-        )
-  }
+  implicit val rateDecoder: Decoder[Rate] = (c: HCursor) => for {
+    from <- c.downField("from").as[String].map(Currency.fromString)
+    to <- c.downField("to").as[String].map(Currency.fromString)
+    price <- c.downField("price").as[BigDecimal]
+    timestamp <- c.downField("timestamp").as[String].map(OffsetDateTime.parse(_, dateTimeFormatter))
+  } yield
+    Rate(
+      Rate.Pair(from, to),
+      Price(price),
+      Timestamp(timestamp)
+    )
   def rateToString(rate: Rate): String = rate.asJson.noSpaces
 
   def parseRate(rateString: String): Either[io.circe.Error, Rate] =

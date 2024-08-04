@@ -12,6 +12,7 @@ import scala.concurrent.ExecutionContext
 
 object Main extends IOApp {
 
+  // Could be added a logger, that will sink to Splunk, ELK, etc. Here is just a template
   implicit val log: Log[IO] = Log.NoOp.instance
   override def run(args: List[String]): IO[ExitCode] =
     new Application[IO].stream(executionContext).compile.drain.as(ExitCode.Success)

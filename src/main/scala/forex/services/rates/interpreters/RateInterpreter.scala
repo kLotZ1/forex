@@ -16,8 +16,9 @@ class RateInterpreter[F[_]: Sync](
     cache: Cache[F, String, String]
 ) extends ServiceAlgebra[F] {
   private val cacheTTL: FiniteDuration = 5.minutes
+
   override def get(pair: Rate.Pair, token: String): F[Either[ServiceError, Rate]] = {
-    val cacheKey = s"rate:${pair.from}:${pair.to}"
+    val cacheKey = buildRedisKey(pair)
 
     cache.get(cacheKey).flatMap {
       case Some(rateString) =>
@@ -34,4 +35,7 @@ class RateInterpreter[F[_]: Sync](
           .map(_.leftMap(toServiceError))
     }
   }
+
+  private def buildRedisKey(pair: Rate.Pair) =
+    s"rate:${pair.from}:${pair.to}"
 }
