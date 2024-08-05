@@ -68,5 +68,5 @@ libraryDependencies ++= Seq(
   Libraries.scalaTest      % Test,
   Libraries.scalaCheck     % Test,
   Libraries.catsScalaCheck % Test,
-  Libraries.scalaMock      % Test
+  Libraries.mockito        % Test
 )
