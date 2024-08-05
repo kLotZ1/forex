@@ -23,7 +23,7 @@ Below are the instructions for setting up and starting this application. In addi
    docker run -d -p 6379:6379 --name redis-container -v redis-data:/data redis redis-server --requirepass "forex_redis_pass"
    ```
 
-   The password is hardcoded, which I will mention later. Ensure all ports are available.
+   The password is hardcoded, which I will mention later. Ensure all ports are available. Port in proxy config was moved from 8080 to 8081
 
 ## Assumptions, Simplifications, and Choices
 
@@ -72,16 +72,17 @@ Regarding the Redis password, normally, the Redis configuration or at least the 
 
 The proxy structure is as follows:
 
-<img src="/struct.png?raw=true" style="background-color:white;">
+<img src="/struct.png?raw=true" style="background-color:white;" alt="structure_img">
 
 The request flow is described in this flow diagram:
 
-<img src="/flow.png?raw=true" style="background-color:white;">
+<img src="/flow.png?raw=true" style="background-color:white;" alt="flow_img">
 
 ## What could be improved
 
 Even though I worked hard on this project, it is, of course, not ideal. 
 In my opinion, the structure could be improved, and the classes and methods could be cleaner. Encoding and decoding were challenging for me, though they are not that hard.
-More unit tests could be written, and access to Redis could be more secure. I would really like to see how a professional would implement this service or at least have a discussion about potential improvements.
+More unit tests could be written, and access to Redis could be more secure. Hard-coded error messages, API prefixes also could be handled differently.
+I would really like to see how a professional would implement this service or at least have a discussion about potential improvements.
 
 Anyway, it was a fun experience.

@@ -21,8 +21,8 @@ class Module[F[_]: Concurrent: Timer](config: ApplicationConfig,
   private val ratesProgram: RatesProgram[F]                 = RatesProgram[F](ratesService)
   private val ratesHttpRoutes: HttpRoutes[F]                = new RatesHttpRoutes[F](ratesProgram).routes
 
-  type PartialMiddleware = HttpRoutes[F] => HttpRoutes[F]
-  type TotalMiddleware = HttpApp[F] => HttpApp[F]
+  private type PartialMiddleware = HttpRoutes[F] => HttpRoutes[F]
+  private type TotalMiddleware = HttpApp[F] => HttpApp[F]
 
   private val routesMiddleware: PartialMiddleware = {
     { http: HttpRoutes[F] =>
